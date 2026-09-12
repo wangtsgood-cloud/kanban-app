@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>待辦看板 · Minimalist Kanban</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Google Fonts: Noto Sans TC & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <main class="app-wrapper">
+    <!-- 頂部卡片：標題、統計與新增 -->
+    <header class="app-header-card">
+      <div class="header-top">
+        <div>
+          <p id="current-date" class="date-text">載入中...</p>
+          <h1 class="app-title">工作與生活看板</h1>
+        </div>
+        <div class="stats-group">
+          <span class="stats-pill" id="total-stats">共 0 項任務</span>
+        </div>
+      </div>
+
+      <!-- 新增任務表單 -->
+      <form id="todo-form" class="todo-form">
+        <div class="input-wrapper">
+          <input 
+            type="text" 
+            id="todo-input" 
+            placeholder="新增想做的事情..." 
+            maxlength="120" 
+            autocomplete="off"
+            required
+          >
+          <button type="submit" id="add-btn" class="add-btn" aria-label="新增任務">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>新增</span>
+          </button>
+        </div>
+
+        <div class="form-controls">
+          <div class="selectors-group">
+            <!-- 分類選擇器 -->
+            <div class="category-selector">
+              <span class="selector-label">分類：</span>
+              <label class="category-option work">
+                <input type="radio" name="category" value="work" checked>
+                <span class="pill">
+                  <span class="dot"></span>
+                  工作
+                </span>
+              </label>
+              <label class="category-option life">
+                <input type="radio" name="category" value="life">
+                <span class="pill">
+                  <span class="dot"></span>
+                  生活
+                </span>
+              </label>
+            </div>
+
+            <!-- 優先程度選擇器 -->
+            <div class="priority-selector">
+              <span class="selector-label">優先度：</span>
+              <label class="priority-option high">
+                <input type="radio" name="priority" value="high">
+                <span class="pill">
+                  <span class="dot"></span>
+                  High
+                </span>
+              </label>
+              <label class="priority-option medium">
+                <input type="radio" name="priority" value="medium" checked>
+                <span class="pill">
+                  <span class="dot"></span>
+                  Medium
+                </span>
+              </label>
+              <label class="priority-option low">
+                <input type="radio" name="priority" value="low">
+                <span class="pill">
+                  <span class="dot"></span>
+                  Low
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 分類篩選頁籤 -->
+          <nav class="filter-nav" aria-label="任務分類篩選">
+            <button type="button" class="filter-btn active" data-filter="all">全部</button>
+            <button type="button" class="filter-btn" data-filter="work">工作</button>
+            <button type="button" class="filter-btn" data-filter="life">生活</button>
+          </nav>
+        </div>
+      </form>
+    </header>
+
+    <!-- 三欄式看板區域 -->
+    <section class="kanban-board" aria-label="看板任務欄位">
+      <!-- 1. To-do 欄位 -->
+      <div class="kanban-column column-todo" data-status="todo">
+        <div class="column-header">
+          <div class="column-title-wrap">
+            <span class="status-indicator indicator-todo"></span>
+            <h2 class="column-title">To-do</h2>
+            <span class="column-count" id="count-todo">0</span>
+          </div>
+        </div>
+        <div class="column-cards" id="cards-todo" data-status="todo">
+          <!-- 任務卡片動態渲染於此 -->
+        </div>
+        <div class="column-empty" id="empty-todo" style="display: none;">
+          <p>尚無待辦事項</p>
+        </div>
+      </div>
+
+      <!-- 2. Process 欄位 -->
+      <div class="kanban-column column-process" data-status="process">
+        <div class="column-header">
+          <div class="column-title-wrap">
+            <span class="status-indicator indicator-process"></span>
+            <h2 class="column-title">Process</h2>
+            <span class="column-count" id="count-process">0</span>
+          </div>
+        </div>
+        <div class="column-cards" id="cards-process" data-status="process">
+          <!-- 任務卡片動態渲染於此 -->
+        </div>
+        <div class="column-empty" id="empty-process" style="display: none;">
+          <p>將卡片拖曳至此處進行</p>
+        </div>
+      </div>
+
+      <!-- 3. Done 欄位 -->
+      <div class="kanban-column column-done" data-status="done">
+        <div class="column-header">
+          <div class="column-title-wrap">
+            <span class="status-indicator indicator-done"></span>
+            <h2 class="column-title">Done</h2>
+            <span class="column-count" id="count-done">0</span>
+          </div>
+          <button type="button" id="clear-done-btn" class="clear-done-btn" title="清除已完成項目" style="display: none;">
+            清除
+          </button>
+        </div>
+        <div class="column-cards" id="cards-done" data-status="done">
+          <!-- 任務卡片動態渲染於此 -->
+        </div>
+        <div class="column-empty" id="empty-done" style="display: none;">
+          <p>已完成的任務將歸檔於此</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
