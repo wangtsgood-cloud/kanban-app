@@ -65,6 +65,7 @@
   // DOM 元素選取
   const todoForm = document.getElementById('todo-form');
   const todoInput = document.getElementById('todo-input');
+  const todoDueDateInput = document.getElementById('todo-due-date');
   const filterBtns = document.querySelectorAll('.filter-btn');
   const currentDateEl = document.getElementById('current-date');
   const totalStatsEl = document.getElementById('total-stats');
@@ -115,6 +116,32 @@
     }
   }
 
+  // 格式化截止日期為 年/月/日 (例如：2026/09/12)
+  function formatDueDate(dueDateStr) {
+    if (!dueDateStr) return '';
+    const parts = dueDateStr.split('-');
+    if (parts.length === 3) {
+      return `${parts[0]}/${parts[1]}/${parts[2]}`;
+    }
+    return dueDateStr;
+  }
+
+  // 判斷截止日期是否為今天或已過期
+  function isDueOrOverdue(dueDateStr) {
+    if (!dueDateStr) return false;
+    const parts = dueDateStr.split('-');
+    if (parts.length !== 3) return false;
+
+    // 設定至當天 00:00:00 進行精確日期比較
+    const due = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    due.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return due.getTime() <= today.getTime();
+  }
+
   // 從 LocalStorage 載入資料（相容舊版資料格式）
   function loadTodos() {
     try {
@@ -127,6 +154,7 @@
             text: item.text || '未命名任務',
             category: item.category === 'life' ? 'life' : 'work',
             priority: ['high', 'medium', 'low'].includes(item.priority) ? item.priority : 'medium',
+            dueDate: item.dueDate || null,
             status: item.status || (item.completed ? 'done' : 'todo'),
             createdAt: item.createdAt || Date.now()
           }));
@@ -143,6 +171,7 @@
             text: item.text || '未命名任務',
             category: item.category === 'life' ? 'life' : 'work',
             priority: 'medium',
+            dueDate: null,
             status: item.completed ? 'done' : 'todo',
             createdAt: item.createdAt || Date.now()
           }));
@@ -173,8 +202,10 @@
 
       const selectedCategory = document.querySelector('input[name="category"]:checked')?.value || 'work';
       const selectedPriority = document.querySelector('input[name="priority"]:checked')?.value || 'medium';
-      addTodo(text, selectedCategory, selectedPriority);
+      const dueDate = todoDueDateInput?.value ? todoDueDateInput.value.trim() : '';
+      addTodo(text, selectedCategory, selectedPriority, dueDate);
       todoInput.value = '';
+      if (todoDueDateInput) todoDueDateInput.value = '';
       todoInput.focus();
     });
 
@@ -226,13 +257,14 @@
     });
   }
 
-  // 新增任務 (預設進入 To-do 欄位，附帶優先程度)
-  function addTodo(text, category, priority = 'medium') {
+  // 新增任務 (預設進入 To-do 欄位，附帶優先程度與可選截止日期)
+  function addTodo(text, category, priority = 'medium', dueDate = null) {
     const newTodo = {
       id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
       text: text,
       category: category,
       priority: priority,
+      dueDate: dueDate || null,
       status: 'todo',
       createdAt: Date.now()
     };
@@ -382,6 +414,24 @@
 
     badgeGroup.appendChild(tag);
     badgeGroup.appendChild(priorityTag);
+
+    // 截止日期標籤（若有填寫，顯示 年/月/日，今天或已過期標籤顯示紅色）
+    if (todo.dueDate) {
+      const dateBadge = document.createElement('span');
+      const isUrgent = isDueOrOverdue(todo.dueDate);
+      dateBadge.className = `date-badge ${isUrgent ? 'urgent' : ''}`.trim();
+      dateBadge.title = isUrgent ? '截止日：今天或已過期' : `截止日：${formatDueDate(todo.dueDate)}`;
+      dateBadge.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span>${formatDueDate(todo.dueDate)}</span>
+      `;
+      badgeGroup.appendChild(dateBadge);
+    }
 
     const shortcuts = document.createElement('div');
     shortcuts.className = 'move-shortcuts';

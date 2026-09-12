@@ -225,10 +225,29 @@ body {
 }
 
 .category-selector,
-.priority-selector {
+.priority-selector,
+.due-date-selector {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.due-date-input {
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  background-color: #FFFFFF;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  outline: none;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.due-date-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
 .selector-label {
@@ -696,6 +715,35 @@ body {
 }
 .priority-badge.low::before {
   background-color: var(--priority-low-dot);
+}
+
+/* 截止日期標籤 (Due Date Badge) */
+.date-badge {
+  font-size: 0.71rem;
+  font-weight: 500;
+  padding: 1.5px 7px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  letter-spacing: 0.01em;
+}
+
+.date-badge svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}
+
+/* 今天或已過期：顯示紅色 */
+.date-badge.urgent {
+  background-color: #FDF2F0;
+  color: #C04838;
+  border-color: #F8C8C2;
+  font-weight: 600;
 }
 
 /* 欄位快速切換箭頭 (提升行動端與鍵盤輔助友善度) */
